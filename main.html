@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='85' r='10' fill='%23696969'/%3E%3Cline x1='50' y1='85' x2='20' y2='20' stroke='black' stroke-width='5'/%3E%3Cline x1='50' y1='85' x2='35' y2='20' stroke='black' stroke-width='5'/%3E%3Cline x1='50' y1='85' x2='50' y2='20' stroke='black' stroke-width='5'/%3E%3Cline x1='50' y1='85' x2='65' y2='20' stroke='black' stroke-width='5'/%3E%3Cline x1='50' y1='85' x2='80' y2='20' stroke='black' stroke-width='5'/%3E%3Cpath d='M 20 20 Q 50 10 80 20' stroke='black' stroke-width='5' fill='none'/%3E%3C/svg%3E">
+    <title>Badminton Doubles Lineup Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply Inter font globally */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple animation for the result display */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-100 to-indigo-200 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 w-full max-w-md">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Badminton Lineup Generator</h1>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Enter Player Names:</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="player1" class="block text-sm font-medium text-gray-600 mb-1">Player 1</label>
+                    <input type="text" id="player1" value="A" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out">
+                </div>
+                <div>
+                    <label for="player2" class="block text-sm font-medium text-gray-600 mb-1">Player 2</label>
+                    <input type="text" id="player2" value="B" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out">
+                </div>
+                <div>
+                    <label for="player3" class="block text-sm font-medium text-gray-600 mb-1">Player 3</label>
+                    <input type="text" id="player3" value="C" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out">
+                </div>
+                <div>
+                    <label for="player4" class="block text-sm font-medium text-gray-600 mb-1">Player 4</label>
+                    <input type="text" id="player4" value="D" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out">
+                </div>
+            </div>
+        </div>
+
+        <button id="generateButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mb-6">
+            Generate Lineup
+        </button>
+
+        <div id="result" class="text-center min-h-[80px]">
+            <p class="text-gray-500 italic">Click the button to generate a lineup.</p>
+        </div>
+
+        <div id="errorMessage" class="text-center text-red-600 mt-4 font-medium min-h-[24px]">
+            </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const generateButton = document.getElementById('generateButton');
+        const resultDiv = document.getElementById('result');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const playerInputs = [
+            document.getElementById('player1'),
+            document.getElementById('player2'),
+            document.getElementById('player3'),
+            document.getElementById('player4')
+        ];
+
+        // Add event listener to the button
+        generateButton.addEventListener('click', generateLineup);
+
+        /**
+         * Shuffles array elements in place using the Fisher-Yates (aka Knuth) Shuffle algorithm.
+         * @param {Array} array The array to shuffle.
+         * @returns {Array} The shuffled array.
+         */
+        function shuffleArray(array) {
+            // Start from the last element and swap one by one.
+            // We don't need to run for the first element that's why i > 0
+            for (let i = array.length - 1; i > 0; i--) {
+                // Pick a random index from 0 to i
+                const j = Math.floor(Math.random() * (i + 1));
+                // Swap elements array[i] and array[j]
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /**
+         * Generates and displays a random doubles lineup.
+         */
+        function generateLineup() {
+            // Clear previous results and errors
+            resultDiv.innerHTML = '';
+            errorMessageDiv.textContent = '';
+            resultDiv.classList.remove('fade-in'); // Remove animation class for reset
+
+            // Get player names from input fields, trim whitespace
+            const players = playerInputs.map(input => input.value.trim());
+
+            // Basic Validation: Check if all player names are filled
+            if (players.some(name => name === '')) {
+                errorMessageDiv.textContent = 'Please enter names for all four players.';
+                return; // Stop execution if validation fails
+            }
+
+            // Basic Validation: Check for duplicate names (case-insensitive)
+            const lowerCasePlayers = players.map(name => name.toLowerCase());
+            if (new Set(lowerCasePlayers).size !== players.length) {
+                errorMessageDiv.textContent = 'Please ensure all player names are unique.';
+                return; // Stop execution if validation fails
+            }
+
+
+            // Shuffle the players array randomly
+            const shuffledPlayers = shuffleArray([...players]); // Use spread syntax to avoid modifying the original order in the input fields
+
+            // Create the two teams
+            const team1Player1 = shuffledPlayers[0];
+            const team1Player2 = shuffledPlayers[1];
+            const team2Player1 = shuffledPlayers[2];
+            const team2Player2 = shuffledPlayers[3];
+
+            // Create the HTML to display the results
+            const resultHTML = `
+                <h2 class="text-lg font-semibold text-gray-700 mb-3 fade-in">Generated Matchup:</h2>
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 fade-in" style="animation-delay: 0.1s;">
+                    <p class="text-xl font-medium text-indigo-800">
+                        <span class="font-bold">${team1Player1}</span> & <span class="font-bold">${team1Player2}</span>
+                    </p>
+                    <p class="text-gray-600 my-1">vs</p>
+                    <p class="text-xl font-medium text-indigo-800">
+                        <span class="font-bold">${team2Player1}</span> & <span class="font-bold">${team2Player2}</span>
+                    </p>
+                </div>
+            `;
+
+            // Display the results
+            resultDiv.innerHTML = resultHTML;
+             // Add fade-in animation class after a tiny delay to ensure it restarts
+            void resultDiv.offsetWidth; // Trigger reflow
+            resultDiv.classList.add('fade-in');
+        }
+
+        // Optional: Trigger generation on pressing Enter in any input field
+        playerInputs.forEach(input => {
+            input.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent default form submission behavior
+                    generateButton.click(); // Simulate button click
+                }
+            });
+        });
+
+    </script>
+
+</body>
+</html>
